@@ -5,10 +5,14 @@
 <body>
 <div id="main">
 <p>
+<img src=img/Pechka.jpg> <br/>
 <h1>Living room heater page</h1>
 <ul>
-<li>WI-FI Configuration <a href="/wifi">HERE.</a></li>
-<li>GPIO status<a href="gpio.tpl">HERE.</a></li>
+<li>WI-FI Configuration <a href="/wifi"> HERE</a>.</li>
+<li>GPIO4 status<a href="gpio4.tpl"> HERE</a>.</li>
+<li>DS18B20: %Temperature%</li>
+<BR>
+Date: %Date%
 </ul>
 </p>
 </div>

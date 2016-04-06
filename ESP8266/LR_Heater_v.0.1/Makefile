@@ -26,10 +26,10 @@ SDK_BASE	?= c:/Espressif/ESP8266_SDK
 #Esptool.py path and port
 PYTHON		?= C:\Python27\python.exe
 ESPTOOL		?= c:\Espressif\utils\esptool.exe
-ESPPORT		?= COM10
+ESPPORT		?= COM3
 
 # name for the target project
-TARGET		= httpd
+TARGET		= LR_HEATER
 
 # which modules (subdirectories) of the project to include in compiling
 #MODULES		= driver user lwip/api lwip/app lwip/core lwip/core/ipv4 lwip/netif
@@ -146,7 +146,8 @@ firmware:
 	$(Q) mkdir -p $@
 
 flash: $(FW_FILE_1) $(FW_FILE_2)
-	$(ESPTOOL) -p $(ESPPORT) write_flash 0x00000 firmware/0x00000.bin 0x3C000 $(BLANKER) 0x40000 firmware/0x40000.bin
+	#$(ESPTOOL) -p $(ESPPORT) write_flash 0x00000 firmware/0x00000.bin 0x3C000 $(BLANKER) 0x40000 firmware/0x40000.bin
+		$(ESPTOOL) -p $(ESPPORT) write_flash 0x00000 firmware/0x00000.bin 0x40000 firmware/0x40000.bin
 
 blanker: $(FW_FILE_1) $(FW_FILE_2)
 	$(ESPTOOL) -p $(ESPPORT) write_flash 0x00000 $(BLANKER) 0x3C000 $(BLANKER) 0x40000 $(BLANKER)

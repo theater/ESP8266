@@ -5,9 +5,9 @@
 
 // HTTPD USER CONFIG
 #define USE_WIFI_MODE		STATIONAP_MODE
-#define WIFI_CLIENTSSID		""
-#define WIFI_CLIENTPASSWORD	""
-#define WIFI_AP_NAME		"ESP8266"
+#define WIFI_CLIENTSSID		"KLP"
+#define WIFI_CLIENTPASSWORD	"charly78"
+#define WIFI_AP_NAME		"LR_HEATER1"
 #define WIFI_AP_PASSWORD	"00000000"
 #define PLATFORM_DEBUG		true
 
@@ -37,15 +37,50 @@
 #define QUEUE_BUFFER_SIZE		 		2048
 
 // Static definitions from MQTT user_init.c
-
-
-#define PIN_GPIO 2
+// GPIO settings - all GPIOs set as GPIO
+// DS18B20
+#define PIN_GPIO2 2
 #define PIN_GPIO2_MUX PERIPHS_IO_MUX_GPIO2_U
 #define PIN_GPIO2_FUNC FUNC_GPIO2
-#define TOPIC_GPIO2 "LR_HEATER1_GPIO2" // USE THIS AS INPUT TOPIC
-#define TOPIC_CB "LR_HEATER1_GPIO2_CB" // USE THIS FOR CALLBACK TO OPENHAB/MQTT
+//#define PIN_GPIO2_TOPIC "LR_HEATER1"
+//#define PIN_GPIO2_TOPIC_CB "LR_HEATER1_CB"
+
+// Output pin for the relay
+#define PIN_GPIO4 4
+#define PIN_GPIO4_MUX PERIPHS_IO_MUX_MTDI_U
+#define PIN_GPIO4_FUNC FUNC_GPIO4
+#define PIN_GPIO4_TOPIC "LR_HEATER1"
+#define PIN_GPIO4_TOPIC_CB "LR_HEATER1_CB"
+
+#define PIN_GPIO5 5
+#define PIN_GPIO5_MUX PERIPHS_IO_MUX_GPIO5_U
+#define PIN_GPIO5_FUNC FUNC_GPIO5
+
+#define PIN_GPIO12 12
+#define PIN_GPIO12_MUX PERIPHS_IO_MUX_MTDI_U
+#define PIN_GPIO12_FUNC FUNC_GPIO12
+
+#define PIN_GPIO13 13
+#define PIN_GPIO13_MUX PERIPHS_IO_MUX_MTCK_U
+#define PIN_GPIO13_FUNC FUNC_GPIO13
+
+#define PIN_GPIO14 14
+#define PIN_GPIO14_MUX PERIPHS_IO_MUX_MTDI_U
+#define PIN_GPIO14_FUNC FUNC_GPIO14
+
+#define LRHEATER_MQTT_Temperature "LRHEATER_MQTT_Temperature"
 
 MQTT_Client mqttClient;
 char currGPIO2State;
+char currGPIO4State;
+char currGPIO5State;
+char currGPIO12State;
+char currGPIO13State;
+char currGPIO14State;
+char sTemperature[10];
+char sDate[20];
+
+#define sleepms(x) os_delay_us(x*1000);
+
 
 #endif

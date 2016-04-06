@@ -108,33 +108,42 @@ int ICACHE_FLASH_ATTR cgiReadFlash(HttpdConnData *connData) {
 // ===============================================================================
 //     MY BULSHIT STARTS HERE
 // ===============================================================================
-int ICACHE_FLASH_ATTR cgiGPIO(HttpdConnData *connData) {
-	int len;
+int ICACHE_FLASH_ATTR cgiGPIO2(HttpdConnData *connData) {
+	int len,gpio2,gpio4;
 		char buff[1024];
 		if (connData->conn==NULL) {
 			//Connection aborted. Clean up.
 			return HTTPD_CGI_DONE;
 		}
 
-		len=httpdFindArg(connData->postBuff, "GPIO2", buff, sizeof(buff));
-		if (len!=0) {
-			currGPIO2State=atoi(buff);
-			if(currGPIO2State) {
-				GPIO_OUTPUT_SET(PIN_GPIO, 1);
-				INFO("GPIO2 set to ON\r\n");
-				MQTT_Publish(&mqttClient,TOPIC_CB,"ON",2,0,0);
-			} else {
-				GPIO_OUTPUT_SET(PIN_GPIO, 0);
-				INFO("GPIO2 set to OFF\r\n");
-				MQTT_Publish(&mqttClient,TOPIC_CB,"OFF",3,0,0);
-
-			}
-		}
-		httpdRedirect(connData, "gpio.tpl");
+		httpdRedirect(connData, "gpio2.tpl");
 		return HTTPD_CGI_DONE;
 	}
 
-
+int ICACHE_FLASH_ATTR cgiGPIO4(HttpdConnData *connData) {
+	int len;
+		char buff[1024];
+		if (connData->conn==NULL) {
+			//Connection aborted. Clean up.
+			return HTTPD_CGI_DONE;
+		}
+		len=httpdFindArg(connData->postBuff, "GPIO4", buff, sizeof(buff));
+		if (len!=0) {
+			if(os_strcmp(buff, "ON")==0) {
+				currGPIO4State=1;
+				GPIO_OUTPUT_SET(PIN_GPIO4, 1);
+				INFO("GPIO4 set to ON\r\n");
+				MQTT_Publish(&mqttClient,PIN_GPIO4_TOPIC_CB,"ON",2,0,0);
+			} else {
+				currGPIO4State=0;
+				GPIO_OUTPUT_SET(PIN_GPIO4, 0);
+				INFO("GPIO2 set to OFF\r\n");
+				MQTT_Publish(&mqttClient,PIN_GPIO4_TOPIC_CB,"OFF",3,0,0);
+			}
+		}
+		httpdRedirect(connData, "gpio4.tpl");
+		return HTTPD_CGI_DONE;
+	}
 
 
 void ICACHE_FLASH_ATTR tplGPIO(HttpdConnData *connData, char *token, void **arg) {
@@ -142,8 +151,8 @@ void ICACHE_FLASH_ATTR tplGPIO(HttpdConnData *connData, char *token, void **arg)
 	if (token==NULL) return;
 //	currMqttState=GPIO_INPUT_GET(PIN_GPIO);
 	os_strcpy(buff, "Unknown");
-	if (os_strcmp(token, "GPIO2_status")==0) {
-		if (currGPIO2State) {
+	if (os_strcmp(token, "GPIO4_status")==0) {
+		if (currGPIO4State) {
 				os_strcpy(buff, "ON");
 			} else {
 			os_strcpy(buff, "OFF");
@@ -152,3 +161,16 @@ void ICACHE_FLASH_ATTR tplGPIO(HttpdConnData *connData, char *token, void **arg)
 	httpdSend(connData, buff, -1);
 }
 
+void ICACHE_FLASH_ATTR tplIndex(HttpdConnData *connData, char *token, void **arg) {
+	char buff[128];
+	if (token==NULL) return;
+
+	os_strcpy(buff, "Unknown");
+	if (os_strcmp(token, "Temperature")==0) {
+		os_sprintf(buff, "%s °C",sTemperature);
+	}
+	if (os_strcmp(token, "Date")==0) {
+		os_sprintf(buff, "%s",sDate);
+	}
+	httpdSend(connData, buff, -1);
+}

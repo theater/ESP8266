@@ -1,0 +1,141 @@
+Group	All
+Group	Heaters	"All Heaters"	<heater2>	(All)	
+Group	Sensors	(All)
+Group 	System (All)	
+Group	Roller_Shutters	(All)	
+Group	Aquarium	(All)	
+Group	Persisted_items	(All)	
+Group	Lights	"All Lights"	<light>	(All)	
+Group   Coolers "All coolers/chillers" <cooler2> (All)
+Group	Indicators	"All Indicators [(%d)]"	<light>	(All)	
+Group	Modes	"All indicator modes [%d]"	(All)	
+Group	LR	"Дневна стая"	<living>
+Group	LR_Programs	(LR)	
+Group 	IP_Devices (All,Persisted_items)
+Group gWeather_Humidity (All)
+Group gWeather_Temperature (All)
+Group gWeather_pressure (All)
+Group EveryHourPersist "Group for persisting every hour" (All)
+Group EndOfEveryDayPersist "Group for persisting once a day" (All)
+Group EveryChangePersist "Group for persisting each change" (All)
+Group everyThirtyMinutesPersist "Persist on every 30 min" (All)
+Group CompareAverage "Group for comparing forecast and LR average"
+Group Setters "Every setter button"
+Group floor1 "Етаж 1"
+Group floor2 "Етаж 2"
+Group floor3 "Етаж 3"
+ 
+// global items
+Number	ALL_Reinitialize	"Initialize system"	(All)
+Number Debug 	"DEBUG MODE" (All,EveryChangePersist)
+
+
+//Weather
+Group	Weather_Chart	(Weather)
+//My Station:
+Number	Weather_Temp_Max	"Todays Maximum [%.1f °C]"	<temperature>	(EndOfEveryDayPersist)	
+Number	Weather_Temp_Min	"Todays Minimum [%.1f °C]"	<temperature>	(EndOfEveryDayPersist)	
+Number Weather_temperature1 "Outside Temperature [%.1f °C]" <temperature> (All,Sensors,gWeather_Temperature) { mqtt="<[mqtt:Weather_temperature1:state:default]" }
+Number Weather_temperature2 "DS18B20 [%.1f °C]" <temperature> (All,Sensors) { mqtt="<[mqtt:Weather_temperature1:state:default]" }
+// Internet weather:
+// UNDERGROUND WEATHER
+Number Weather_temperature_Max_wunderground "Underground Temp MAX [%.1f °C]" <temperature> (EndOfEveryDayPersist)
+Number Weather_temperature_Min_wunderground "Underground Temp MIN [%.1f °C]" <temperature> (EndOfEveryDayPersist) //Wunderground
+Number	Weather_pressure_wunderground	"Underground Pressure [%.0f mb]"	<temperature> (All,everyThirtyMinutesPersist,gWeather_pressure) {weather="locationId=wunderground, type=atmosphere, property=pressure"}
+Number	Weather_temperature_wunderground	"Underground Temperature [%.1f °C]"	<temperature> (All,everyThirtyMinutesPersist,gWeather_Temperature)		{weather="locationId=wunderground, type=temperature, property=current"}
+//String	Weather_humidity_wunderground	"Underground Humidity [%d %%]"	<temperature> (All,everyThirtyMinutesPersist,gWeather_Humidity)		{weather="locationId=wunderground, type=atmosphere, property=humidity"}
+// YAHOO WEATHER
+Number Weather_temperature_Max_yahoo "Yahoo Temp MAX [%.1f °C]" (EndOfEveryDayPersist)
+Number Weather_temperature_Min_yahoo "Yahoo Temp MIN [%.1f °C]" (EndOfEveryDayPersist)
+Number	Weather_Temperature_yahoo	"Yahoo temperature [%.1f °C]"	<temperature>	(Weather_Chart,everyThirtyMinutesPersist,gWeather_Temperature) {weather="locationId=yahoo, type=temperature, property=current"}
+Number	Weather_humidity_yahoo "Yahoo Humidity [%d %%]"	<temperature>	(All,everyThirtyMinutesPersist,gWeather_Humidity)	{weather="locationId=yahoo, type=atmosphere, property=humidity"}
+Number Weather_forecast_yahoo_high "Yahoo Tomorrow high [%.1f °C]" <temperature>  (EndOfEveryDayPersist){weather="locationId=yahoo, forecast=1, type=temperature, property=max"}
+Number Weather_forecast_yahoo_low "Yahoo Tomorrow low [%.1f °C]" <temperature> (EndOfEveryDayPersist,EveryHourPersist) {weather="locationId=yahoo, forecast=1, type=temperature, property=min"}
+Number Weather_forecast_yahoo_avg "Yahoo Tomorrow Average [%.1f °C]" <temperature> (CompareAverage,EndOfEveryDayPersist,EveryHourPersist)
+String   Weather_yahoo_CommonId  "Common conditions [MAP(weather_en.map):%s]" <weather>  {weather="locationId=yahoo, type=condition, property=commonId"}
+
+Number Weather_Station_count "Resets count [%d]"<network> (All)  { mqtt="<[mqtt:Weather_Station_count:state:default" }
+
+DateTime	Date	"Date [%1$tA, %1$td.%1$tm.%1$tY]"	<calendar>	{ ntp="Europe/Berlin:de_DE" }
+DateTime	Weather_pressure_LastUpdate	"Last Update [%1$ta %1$tR]"	<clock>
+DateTime	Weather_altitude_LastUpdate	"Last Update [%1$ta %1$tR]"	<clock>
+DateTime	Weather_temperature1_LastUpdate	"Last Update [%1$ta %1$tR]"	<clock>
+DateTime	Weather_LastUpdate	"Last Update [%1$ta %1$tR]"	<clock>
+DateTime	Weather_humidity_LastUpdate	"Last Update [%1$ta %1$tR]"	<clock>
+
+Number	Chart_Period	"Chart Period"	//used to setup the periods of charts as temporary variable
+Number	Chart_Period1	"Chart Period1" //used to setup the periods of charts as temporary variable
+Number	Chart_Period2	"Chart Period2" //used to setup the periods of charts as temporary variable
+
+
+// Some custom buttons for exec commands
+Number OpenHAB "OpenHAB commands" <settings> (System) // {exec="/hab/openhab/scripts/clean_logs.sh"} 
+Switch BackupSystem "Backup the configuration" <settings> (System) // {exec="/root/backup.sh"}
+Number HomeAway "Family currently at:" <settings> (System,Persisted_items) { mqtt=">[mqtt:HomeAway:command:*:${command}]" }
+
+// PLAYGROUND
+//Number SendMail <network>
+Number initializePlayground "Initialize playground" (All,floor2)
+String KIDS_MODE "Mode" <temperature> (All,Setters,floor2) { mqtt=">[mqtt:home/floor2/kids/mode/1:command:*:${command}]" } 
+Number KIDS_MODE_CB "Зададена температура [%.1f °C]" <temperature> (All,floor2) { mqtt=">[mqtt:home/floor2/kids/mode/1:command:*:${command}]" }
+Number KIDS_TEMP_01	"Температура в [%.1f °C]"	<temperature>	(All,Sensors,floor2) { mqtt="<[mqtt:home/floor2/kids/temperature/1:state:default]" }
+Number KIDS_DESIRED_TEMP_01 "Зададена температура [%.1f °C]" <temperature> (All,Setters,floor2) { mqtt=">[mqtt:home/floor2/kids/desired/temperature/1:command:*:${command}]" }
+Switch KIDS_RAD_01 "Радиатор 1" <heater2>	(All,Heaters,floor2) { mqtt=">[mqtt:home/floor2/kids/radiator/1:command:*:${command}]" }
+Switch KIDS_RAD_02 "Радиатор 2" <heater2>	(All,Heaters,floor2) { mqtt=">[mqtt:home/floor2/kids/radiator/2:command:*:${command}]" }
+Switch KIDS_RAD_01CB "Радиатор 1 статус" <heater2> (All,Heaters,floor2) { mqtt="<[mqtt:home/floor2/kids/radiator/1cb:command:default]" }
+Switch KIDS_RAD_02CB "Радиатор 2 статус" <heater2> (All,Heaters,floor2) { mqtt="<[mqtt:home/floor2/kids/radiator/2cb:command:default]" }
+
+String CORRIDOR_MODE "Mode" <temperature> (All,Setters,floor2) { mqtt=">[mqtt:home/floor2/corridor/mode/1:command:*:${command}]" } 
+Number CORRIDOR_MODE_CB "Зададена температура [%.1f °C]" <temperature> (All,floor2) { mqtt=">[mqtt:home/floor2/corridor/mode/1:command:*:${command}]" }
+Number CORRIDOR_TEMP_01	"Температура[%.1f °C]"	<temperature>	(All,Sensors,floor2) { mqtt="<[mqtt:home/floor2/corridor/temperature/1:state:default]" }
+Number CORRIDOR_DESIRED_TEMP_01 "Зададена температура[%.1f °C]" <temperature> (All,Setters,floor2) { mqtt=">[mqtt:home/floor2/corridor/desired/temperature/1:command:*:${command}]" }
+Switch CORRIDOR_RAD_01 "Радиатор 1" <heater2>	(All,Heaters,floor2) { mqtt=">[mqtt:home/floor2/corridor/radiator/1:command:*:${command}]" }
+Switch CORRIDOR_RAD_02 "Радиатор 2" <heater2>	(All,Heaters,floor2) { mqtt=">[mqtt:home/floor2/corridor/radiator/2:command:*:${command}]" }
+Switch CORRIDOR_RAD_01CB "Радиатор 1 статус" <heater2> (All,Heaters,floor2) { mqtt="<[mqtt:home/floor2/corridor/radiator/1cb:command:default]" }
+Switch CORRIDOR_RAD_02CB "Радиатор 2 статус" <heater2> (All,Heaters,floor2) { mqtt="<[mqtt:home/floor2/corridor/radiator/2cb:command:default]" }
+
+String BIGBATH_MODE "Mode" <temperature> (All,Setters,floor2) { mqtt=">[mqtt:home/floor2/bigbath/mode/1:command:*:${command}]" } 
+Number BIGBATH_MODE_CB "Зададена температура [%.1f °C]" <temperature> (All,floor2) { mqtt=">[mqtt:home/floor2/bigbath/mode/1:command:*:${command}]" }
+//Number BIGBATH_TEMP_01	"Температура [%.1f °C]"	<temperature>	(All,Sensors,floor2) { mqtt="<[mqtt:home/floor2/bigbath/temperature/1:state:default]" }
+Number BIGBATH_TEMP_01	"Температура [%.1f °C]"	<temperature>	(All,Sensors,floor2) { mqtt="<[mqtt:home/floor2/bigbath/temperature/1:state:default]" }
+Number BIGBATH_DESIRED_TEMP_01 "Зададена температура [%.1f °C]" <temperature> (All,Setters,floor2) { mqtt=">[mqtt:home/floor2/bigbath/desired/temperature/1:command:*:${command}]" }
+Number BIGBATH_HUM_01	"Влажност [%.0f %%]"	<temperature>	(All,Sensors,floor2) { mqtt="<[mqtt:home/floor2/bigbath/humidity/1:state:default]" }
+//Number BIGBATH_HUM_01	"Влажност [%.0f %%]"	<temperature>	(All,Sensors,floor2) { mqtt="<[mqtt:BR_H_SENSOR:state:default]" }
+Number BIGBATH_DESIRED_HUM_01 "Зададена влажност [%d %%]" <temperature> (All,Setters,floor2) { mqtt=">[mqtt:home/floor2/bigbath/desired/humidity/1:command:*:${command}]" }
+Switch BIGBATH_RAD_01 "Радиатор 1" <heater2>	(All,Heaters,floor2) { mqtt=">[mqtt:home/floor2/bigbath/radiator/1:command:*:${command}]" }
+Switch BIGBATH_RAD_02 "Радиатор 2" <heater2>	(All,Heaters,floor2) { mqtt=">[mqtt:home/floor2/bigbath/radiator/2:command:*:${command}]" }
+Switch BIGBATH_RAD_01CB "Радиатор 1 статус" <heater2> (All,Heaters,floor2) { mqtt="<[mqtt:home/floor2/bigbath/radiator/1cb:command:default]" }
+Switch BIGBATH_RAD_02CB "Радиатор 2 статус" <heater2> (All,Heaters,floor2) { mqtt="<[mqtt:home/floor2/bigbath/radiator/2cb:command:default]" }
+Switch BIGBATH_FAN_01 "Вентилатор" <fan>	(All,Heaters,floor2) { mqtt=">[mqtt:home/floor2/bigbath/fan/1:command:*:${command}]" }
+Switch BIGBATH_FAN_01CB "Вентилатор статус" <fan> (All,Heaters,floor2) { mqtt="<[mqtt:home/floor2/bigbath/fan/1cb:command:default]" }
+Switch BIGBATH_FAN_SPEED_01 "Fanspeed" <fan>	(All,Heaters,floor2) { mqtt=">[mqtt:home/floor2/bigbath/fan/1/speed:command:*:${command}]" }
+Switch BIGBATH_FAN_SPEED_01CB "Fanspeed state" <fan> (All,Heaters,floor2) { mqtt="<[mqtt:home/floor2/bigbath/fan/1/speed/cb:command:default]" }
+
+String MASTER_BEDROOM_MODE "Mode" <temperature> (All,Setters,floor2) { mqtt=">[mqtt:home/floor2/corridor/mode/1:command:*:${command}]" } 
+Number MASTER_BEDROOM_MODE_CB "Зададена температура [%.1f °C]" <temperature> (All,floor2) { mqtt=">[mqtt:home/floor2/masterbedroom/mode/1:command:*:${command}]" }
+Number MASTER_BEDROOM_TEMP_01	"Температура[%.1f °C]"	<temperature>	(All,Sensors,floor2) { mqtt="<[mqtt:home/floor2/masterbedroom/temperature/1:state:default]" }
+Number MASTER_BEDROOM_DESIRED_TEMP_01 "Зададена температура[%.1f °C]" <temperature> (All,Setters,floor2) { mqtt=">[mqtt:home/floor2/masterbedroom/desired/temperature/1:command:*:${command}]" }
+Switch MASTER_BEDROOM_RAD_01 "Радиатор 1" <heater2>	(All,Heaters,floor2) { mqtt=">[mqtt:home/floor2/masterbedroom/radiator/1:command:*:${command}]" }
+Switch MASTER_BEDROOM_RAD_01CB "Радиатор 1 статус" <heater2> (All,Heaters,floor2) { mqtt="<[mqtt:home/floor2/masterbedroom/radiator/1cb:command:default]" }
+
+String WARDROBE_MODE "Mode" <temperature> (All,Setters,floor2) { mqtt=">[mqtt:home/floor2/wardrobe/mode/1:command:*:${command}]" } 
+Number WARDROBE_MODE_CB "Зададена температура [%.1f °C]" <temperature> (All,floor2) { mqtt=">[mqtt:home/floor2/wardrobe/mode/1:command:*:${command}]" }
+Number WARDROBE_TEMP_01	"Температура[%.1f °C]"	<temperature>	(All,Sensors,floor2) { mqtt="<[mqtt:home/floor2/wardrobe/temperature/1:state:default]" }
+Number WARDROBE_DESIRED_TEMP_01 "Зададена температура[%.1f °C]" <temperature> (All,Setters,floor2) { mqtt=">[mqtt:home/floor2/wardrobe/desired/temperature/1:command:*:${command}]" }
+Switch WARDROBE_RAD_01 "Радиатор 1" <heater2>	(All,Heaters,floor2) { mqtt=">[mqtt:home/floor2/wardrobe/radiator/1:command:*:${command}]" }
+Switch WARDROBE_RAD_01CB "Радиатор 1 статус" <heater2> (All,Heaters,floor2) { mqtt="<[mqtt:home/floor2/wardrobe/radiator/1cb:command:default]" }
+
+String BEDROOM_BATH_MODE "Mode" <temperature> (All,Setters,floor2) { mqtt=">[mqtt:home/floor2/bedroombath/mode/1:command:*:${command}]" } 
+Number BEDROOM_BATH_MODE_CB "Зададена температура [%.1f °C]" <temperature> (All,floor2) { mqtt=">[mqtt:home/floor2/bedroombath/mode/1:command:*:${command}]" }
+Number BEDROOM_BATH_TEMP_01	"Температура [%.1f °C]"	<temperature>	(All,Sensors,floor2) { mqtt="<[mqtt:home/floor2/bedroombath/temperature/1:state:default]" }
+Number BEDROOM_BATH_DESIRED_TEMP_01 "Зададена температура [%.1f °C]" <temperature> (All,Setters,floor2) { mqtt=">[mqtt:home/floor2/bedroombath/desired/temperature/1:command:*:${command}]" }
+Number BEDROOM_BATH_HUM_01	"Влажност [%.0f %%]"	<temperature>	(All,Sensors,floor2) { mqtt="<[mqtt:home/floor2/bedroombath/humidity/1:state:default]" }
+Number BEDROOM_BATH_DESIRED_HUM_01 "Зададена влажност [%d %%]" <temperature> (All,Setters,floor2) { mqtt=">[mqtt:home/floor2/bedroombath/desired/humidity/1:command:*:${command}]" }
+Switch BEDROOM_BATH_RAD_01 "Радиатор 1" <heater2>	(All,Heaters,floor2) { mqtt=">[mqtt:home/floor2/bedroombath/radiator/1:command:*:${command}]" }
+Switch BEDROOM_BATH_RAD_01CB "Радиатор 1 статус" <heater2> (All,Heaters,floor2) { mqtt="<[mqtt:home/floor2/bedroombath/radiator/1cb:command:default]" }
+Switch BEDROOM_BATH_FAN_01 "Вентилатор" <fan>	(All,Heaters,floor2) { mqtt=">[mqtt:home/floor2/bedroombath/fan/1:command:*:${command}]" }
+Switch BEDROOM_BATH_FAN_01CB "Вентилатор статус" <fan> (All,Heaters,floor2) { mqtt="<[mqtt:home/floor2/bedroombath/fan/1/cb:command:default]" }
+Switch BEDROOM_BATH_FAN_SPEED_01 "Fanspeed" <fan>	(All,Heaters,floor2) { mqtt=">[mqtt:home/floor2/bedroombath/fan/1/speed:command:*:${command}]" }
+Switch BEDROOM_BATH_FAN_SPEED_01CB "Fanspeed state" <fan> (All,Heaters,floor2) { mqtt="<[mqtt:home/floor2/bedroombath/fan/1/speed/cb:command:default]" }
+
+

@@ -1,0 +1,99 @@
+import org.openhab.core.library.types.*
+import org.openhab.core.persistence.*
+import org.openhab.model.script.actions.*
+import org.openhab.action.*
+import java.lang.Math
+import org.joda.time.*
+
+var Number counter = 1
+//var Timer timer = null
+
+rule "Hourly different stuff"
+when Time cron "0 0 * * * ?" 
+then
+	logDebug("RULES","Hourly rule run")
+    executeCommandLine("touch /hab/openhab/configurations/persistence/mysql.persist")  // make sure that persistences got restored at least hourly
+end
+
+rule "Daily start of the day"
+when System started or Time cron "0 1 0 * * ?" 
+then
+logDebug("RULES","Daily start of the day")
+end
+
+rule "Daily end of the day"
+when System started or Time cron "50 23 0 * * ?" 
+then
+logDebug("RULES","Daily end of the day")
+end
+ 
+rule "Select Radio Station"
+	when
+		Item Radio_Station received command
+	then
+		switch(receivedCommand) {
+			case 0 : playStream(null)
+			case 1 : playStream("http://metafiles.gl-systemhaus.de/hr/hr3_2.m3u")
+			case 2 : playStream("http://mp3-live.swr3.de/swr3_m.m3u")
+			case 3 : playStream("http://edge.live.mp3.mdn.newmedia.nacamar.net/radioffh/livestream.mp3.m3u")
+		}
+end
+
+
+
+/**
+ * The following rules help initializing the demo items with some helpful states.
+ */
+
+rule "Initialize states of variables"
+	when
+		System started or Item ALL_Reinitialize received command
+	then 
+	logDebug("RULES","System Initialization ENDS HERE")
+end
+
+rule "Initialize playground" when Item initializePlayground received command
+then 
+	postUpdate(KIDS_DESIRED_TEMP_01,25) 
+	postUpdate(CORRIDOR_DESIRED_TEMP_01,25)
+	postUpdate(BIGBATH_DESIRED_TEMP_01,25)
+	postUpdate(BIGBATH_DESIRED_HUM_01,65)
+	postUpdate(MASTER_BEDROOM_DESIRED_TEMP_01,25)
+	postUpdate(WARDROBE_DESIRED_TEMP_01,25)
+	postUpdate(BEDROOM_BATH_DESIRED_TEMP_01,25)
+	postUpdate(BEDROOM_BATH_DESIRED_HUM_01,65)
+end 
+
+ /* */ 
+rule "Update max and min temperatures"
+when
+	Time cron "0 0/15 * * * ?" or
+	System started
+then	
+logDebug("RULES","Update min/max temperatures")
+end
+
+
+/////////////////////////////////////////////////////////////////////////////////////////// 
+// Creates an item that stores the last update time of this item
+//rule "Bathroom Temperature update time"
+//when  Item  received update then postUpdate(BR_Temp_sensor_LastUpdate, new DateTimeType()) end
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+//         Callbacks from devices to OH
+
+rule "KIDS_MODE Callback handling" when Item KIDS_MODE_CB received command then postUpdate(KIDS_MODE,KIDS_MODE_CB.state) end
+
+/* */
+////////////////////////////////////////////////////////////////////////////////////////////
+	
+
+
+
+///  ======= Some Administrative tasks on buttons
+
+
+
+//PLAYGROUND

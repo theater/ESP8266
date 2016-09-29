@@ -1,0 +1,111 @@
+sitemap demo label="Къща"
+{
+	Frame label="Етажи"  {
+		Group item=floor1 icon="house"{ 
+			Text item=KIDS_TEMP_01
+		}		
+		Group item=floor2 icon="house"{
+ 			Text item=KIDS_TEMP_01 icon="bedroom" label="Детска стая [%.1f °C]" { // valuecolor=[ LR_Temp_sensor1_LastUpdate>120="lightgray", >25="orange", >17="green", <=17="blue"]
+ 				Frame label="Бутони"{
+ 					Switch item=KIDS_MODE mappings=["ALL_OFF"="off", "MANUAL"="manual", "AUTO"="auto"]
+ 					Switch item=initializePlayground icon="settings" mappings=[1="Initialize"]
+ 					Text item=KIDS_TEMP_01
+ 					Setpoint item=KIDS_DESIRED_TEMP_01 minValue=16 maxValue=30 step=0.5 visibility=[KIDS_MODE=="AUTO"]
+					Switch item=KIDS_RAD_01 visibility=[KIDS_MODE=="MANUAL"]
+					Switch item=KIDS_RAD_02 visibility=[KIDS_MODE=="MANUAL"]
+ 				}
+				Frame label="Активни статуси" {
+					Text item=KIDS_RAD_01CB
+					Text item=KIDS_RAD_02CB 
+				}
+ 			}
+ 			
+ 			Text item=CORRIDOR_TEMP_01 icon="corridor" label="Коридор [%.1f °C]" { // valuecolor=[ LR_Temp_sensor1_LastUpdate>120="lightgray", >25="orange", >17="green", <=17="blue"]
+ 				Frame label="Бутони"{
+ 					Switch item=CORRIDOR_MODE mappings=["ALL_OFF"="off", "MANUAL"="manual", "AUTO"="auto"]
+ 					Switch item=initializePlayground icon="settings" mappings=[1="Initialize"]
+ 					Text item=CORRIDOR_TEMP_01
+ 					Setpoint item=CORRIDOR_DESIRED_TEMP_01 minValue=16 maxValue=30 step=0.5 visibility=[CORRIDOR_MODE=="AUTO"]
+					Switch item=CORRIDOR_RAD_01 visibility=[CORRIDOR_MODE=="MANUAL"]
+					Switch item=CORRIDOR_RAD_02 visibility=[CORRIDOR_MODE=="MANUAL"]
+ 				}
+				Frame label="Активни статуси" {
+					Text item=CORRIDOR_RAD_01CB
+					Text item=CORRIDOR_RAD_02CB 
+				}
+ 			}
+ 			
+ 			Text item=BIGBATH_TEMP_01 icon="bath" label="Голяма баня [%.1f °C]" { // valuecolor=[ LR_Temp_sensor1_LastUpdate>120="lightgray", >25="orange", >17="green", <=17="blue"]
+ 				Frame label="Бутони"{
+ 					Switch item=BIGBATH_MODE mappings=["ALL_OFF"="off", "MANUAL"="manual", "AUTO"="auto"]
+ 					Switch item=initializePlayground icon="settings" mappings=[1="Initialize"]
+ 					Text item=BIGBATH_TEMP_01
+ 					Setpoint item=BIGBATH_DESIRED_TEMP_01 minValue=16 maxValue=30 step=0.5 visibility=[BIGBATH_MODE=="AUTO"]
+ 					Text item=BIGBATH_HUM_01
+ 					Setpoint item=BIGBATH_DESIRED_HUM_01 minValue=50 maxValue=90 step=5 visibility=[BIGBATH_MODE=="AUTO"]
+					Switch item=BIGBATH_RAD_01 visibility=[BIGBATH_MODE=="MANUAL"]
+					Switch item=BIGBATH_RAD_02 visibility=[BIGBATH_MODE=="MANUAL"]
+					Switch item=BIGBATH_FAN_01 visibility=[BIGBATH_MODE=="MANUAL"]
+					Switch item=BIGBATH_FAN_SPEED_01 visibility=[BIGBATH_MODE=="MANUAL"]
+ 				}
+				Frame label="Активни статуси" {
+					Text item=BIGBATH_RAD_01CB
+					Text item=BIGBATH_RAD_02CB 
+					Text item=BIGBATH_FAN_01CB
+					Text item=BIGBATH_FAN_SPEED_01CB
+				}
+ 			}
+ 			
+ 			Text item=MASTER_BEDROOM_TEMP_01 icon="bedroom" label="Спалня [%.1f °C]" { // valuecolor=[ LR_Temp_sensor1_LastUpdate>120="lightgray", >25="orange", >17="green", <=17="blue"]
+ 				Frame label="Бутони"{
+ 					Switch item=MASTER_BEDROOM_MODE mappings=["ALL_OFF"="off", "MANUAL"="manual", "AUTO"="auto"]
+ 					Switch item=initializePlayground icon="settings" mappings=[1="Initialize"]
+ 					Text item=MASTER_BEDROOM_TEMP_01
+ 					Setpoint item=MASTER_BEDROOM_DESIRED_TEMP_01 minValue=16 maxValue=30 step=0.5 visibility=[MASTER_BEDROOM_MODE=="AUTO"]
+					Switch item=MASTER_BEDROOM_RAD_01 visibility=[MASTER_BEDROOM_MODE=="MANUAL"]
+ 				}
+				Frame label="Активни статуси" {
+					Text item=MASTER_BEDROOM_RAD_01CB
+				}
+ 			}
+ 			
+ 			Text item=WARDROBE_TEMP_01 icon="wardrobe2" label="Гардеробна [%.1f °C]" { // valuecolor=[ LR_Temp_sensor1_LastUpdate>120="lightgray", >25="orange", >17="green", <=17="blue"]
+ 				Frame label="Бутони"{
+ 					Switch item=WARDROBE_MODE mappings=["ALL_OFF"="off", "MANUAL"="manual", "AUTO"="auto"]
+ 					Switch item=initializePlayground icon="settings" mappings=[1="Initialize"]
+ 					Text item=WARDROBE_TEMP_01
+ 					Setpoint item=WARDROBE_DESIRED_TEMP_01 minValue=16 maxValue=30 step=0.5 visibility=[WARDROBE_MODE=="AUTO"]
+					Switch item=WARDROBE_RAD_01 visibility=[WARDROBE_MODE=="MANUAL"]
+ 				}
+				Frame label="Активни статуси" {
+					Text item=WARDROBE_RAD_01CB
+				}
+ 			}
+ 			
+ 			Text item=BEDROOM_BATH_TEMP_01 icon="bath" label="Баня на спалнята [%.1f °C]" { // valuecolor=[ LR_Temp_sensor1_LastUpdate>120="lightgray", >25="orange", >17="green", <=17="blue"]
+ 				Frame label="Бутони"{
+ 					Switch item=BEDROOM_BATH_MODE mappings=["ALL_OFF"="off", "MANUAL"="manual", "AUTO"="auto"]
+ 					Switch item=initializePlayground icon="settings" mappings=[1="Initialize"]
+ 					Text item=BEDROOM_BATH_TEMP_01
+ 					Setpoint item=BEDROOM_BATH_DESIRED_TEMP_01 minValue=16 maxValue=30 step=0.5 visibility=[BEDROOM_BATH_MODE=="AUTO"]
+ 					Text item=BEDROOM_BATH_HUM_01
+ 					Setpoint item=BEDROOM_BATH_DESIRED_HUM_01 minValue=50 maxValue=90 step=5 visibility=[BEDROOM_BATH_MODE=="AUTO"]
+					Switch item=BEDROOM_BATH_RAD_01 visibility=[BEDROOM_BATH_MODE=="MANUAL"]
+					Switch item=BEDROOM_BATH_FAN_01 visibility=[BEDROOM_BATH_MODE=="MANUAL"]
+					Switch item=BEDROOM_BATH_FAN_SPEED_01 visibility=[BEDROOM_BATH_MODE=="MANUAL"]
+ 				}
+				Frame label="Активни статуси" {
+					Text item=BEDROOM_BATH_RAD_01CB
+					Text item=BEDROOM_BATH_FAN_01CB
+					Text item=BEDROOM_BATH_FAN_SPEED_01CB
+				}
+ 			}
+ 		}
+ 	Group item= floor3 icon= "house" {
+ 		Text item=KIDS_TEMP_01
+ 	}
+	}
+	Frame label="Date"  {
+		Text item=Date 		
+	}	
+}

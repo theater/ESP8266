@@ -2,6 +2,7 @@
 Strategies {
 	everyMinute : "0 * * * * ?"
 	everyFiveMinutes : "0 */5 * * * ?"
+	everyTenMinutes : "0 */10 * * * ?"
 	everyThirtyMinutes : "0 */30 * * * ?"
 	everyHour : "0 0 * * * ?"
 	everyDay : "0 0 0 * * ?"
@@ -11,12 +12,13 @@ Strategies {
 }
 
 Items {
-	Persisted_items*,Weather_Chart* : strategy = everyHour, everyFiveMinutes, restoreOnStartup
-	Sensors* : strategy = everyFiveMinutes, restoreOnStartup
+	Persisted_items*,Weather_Chart* : strategy = everyTenMinutes, restoreOnStartup
+	Sensors* : strategy = everyTenMinutes, restoreOnStartup
 	EndOfEveryDayPersist*: strategy = endOfEveryDay, restoreOnStartup
-	CompareAverage*: strategy = everyChange, restoreOnStartup
-	ESP8266_temp: strategy= everyThirtyMinutes
+	Setters*,CompareAverage*: strategy = everyChange, restoreOnStartup
+	ESP8266_temp: strategy= everyTenMinutes
 	EveryChangePersist*: strategy = everyChange, restoreOnStartup
 	LR_Avg: strategy=endOfEveryDay, restoreOnStartup
 	EveryHourPersist* : strategy = everyHour, restoreOnStartup
+	everyThirtyMinutesPersist* : strategy = everyThirtyMinutes
 }

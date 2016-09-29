@@ -1,4 +1,4 @@
-sitemap demo label="Main Menu"
+sitemap demo label="Апартамент"
 {
 	Frame label="Стаи"  {
 		Text item=LR_Temp_sensor1 icon="sofa" label="Дневна [%.1f °C]" valuecolor=[ LR_Temp_sensor1_LastUpdate>120="lightgray", >25="orange", >17="green", <=17="blue"]   {		
@@ -8,6 +8,7 @@ sitemap demo label="Main Menu"
 			Frame label="Настройки" {	
 				Switch item=LR_Heater1_mode mappings=[0="off", 1="manual", 2="auto"]	
 				Setpoint item=LR_Temp_set minValue=16 maxValue=26 step=0.5 visibility=[LR_Heater1_mode==2]
+				Colorpicker item=LR_LED1 icon="slider"
 				Text item=LR_Temp_sensor1 valuecolor=[ LR_Temp_sensor1_LastUpdate>120="lightgray", >25="orange", >17="green", <=17="blue"]  {
 					Frame  {
 						Switch item=Chart_Period label="Chart Period" mappings=[0="H", 1="D", 2="W", 3="M", 4="Y"] 					
@@ -28,15 +29,31 @@ sitemap demo label="Main Menu"
 							Chart item=CompareAverage period=Y refresh=3600 visibility=[Chart_Period==4]
 						}	
 				} 		
-				Text item=LR_Heater1 icon="heater2" //mappings=[0="OFF",1="ON"]
+				
+				Text item=LR_Heater_sensor {	
+						Frame  {
+							Switch item=Chart_Period label="Chart Period" mappings=[0="H", 1="D", 2="W", 3="M", 4="Y"] 					
+							Chart item=LR_Heater_sensor period=h refresh=600 visibility=[Chart_Period==0] 					
+							Chart item=LR_Heater_sensor period=D refresh=3600 visibility=[Chart_Period==1] 					
+							Chart item=LR_Heater_sensor period=W refresh=3600 visibility=[Chart_Period==2, Chart_Period==Uninitialized] 					
+							Chart item=LR_Heater_sensor period=M refresh=3600 visibility=[Chart_Period==3]
+							Chart item=LR_Heater_sensor period=Y refresh=3600 visibility=[Chart_Period==4]
+						}	
+				} 		
+				Text item=LR_Heater1_state icon="heater2"
 			}	
 			Frame label="Auto" visibility=[LR_Heater1_mode==2]{					
 				Setpoint item=LR_Set_TemperatureON minValue=5 maxValue=25 step=1 visibility=[LR_Heater1_mode==1]				
+					Text item=Weather_forecast_yahoo_avg valuecolor=[<5="navy",<=7="blue",<=12="green",<=17="orange",>=17="red"] {
+						Chart item=CompareAverage period=W refresh=3600
+					}
 					Text item=LR_Calculated_Time
-					Text item=LR_correction
-					Text item=LR_Heater_last_ONtime
-					Text item=LR_Heater_last_OFFtime
-					Text item=LR_Temp_sensor1_LastUpdate			 					
+					Text item=LR_correction visibility=[Debug==1]
+					Text item=LR_Heater_last_ONtime visibility=[Debug==1]
+					Text item=LR_Heater_last_OFFtime visibility=[Debug==1]
+					Text item=LR_Temp_sensor1_LastUpdate visibility=[Debug==1]
+					Text item=LR_Heater_set_ON_time	visibility=[Debug==1]		 					
+					Text item=LR_Heater_set_OFF_time visibility=[Debug==1]
 //					Setpoint item=LR_Set_Time minValue=0 maxValue=10 step=0.5
 				}		
 			Frame label="Manual" icon="clock"  visibility=[LR_Heater1_mode==1]{
@@ -49,6 +66,7 @@ sitemap demo label="Main Menu"
 		Text item=BR_Temp_sensor icon="bath" label="Баня [%.1f °C]" {	
 			Frame label="Настройки" {	
 				Switch item=BR_Mode mappings=[0="off", 1="manual", 3="boiler on", 4="fan on", 2="auto"]
+				Switch item=BR_Scenes mappings=[0="Нормален режим", 1="Затопли бързо"]
 				Text item=BR_Temp_sensor valuecolor=[ BR_Temp_sensor_LastUpdate>120="lightgray", >25="orange", >17="green", <=17="blue"] {
 					Setpoint item=BR_Temp_Room_Set minValue=10 maxValue=30 step=1
 					Switch item=Chart_Period label="Chart Period" mappings=[0="H", 1="D", 2="W", 3="M", 4="Y"]
@@ -89,7 +107,6 @@ sitemap demo label="Main Menu"
 				Text item=BR_Boiler_state
 				Text item=BR_Fan_state
 				Text item=BR_Heater_state
-				Text item=BR_Input_pin1
 			}
 		} 
 	}	
@@ -135,32 +152,30 @@ sitemap demo label="Main Menu"
 			}		
 		}		
 	}	
-	
+	 
 	Frame label="Weather"  {		
 		Text item=Weather_temperature1 valuecolor=[Weather_temperature1_LastUpdate==Uninitialized="lightgray", Weather_LastUpdate>90="lightgray", >30="red", >25="orange", >10="green", <=10="blue",<=3="navy"]  {
-			Frame label="My Station report"{
-				Text item=Weather_Temp_Max valuecolor=[>30="red", >25="orange", >10="green", <=5="blue"] 				
-				Text item=Weather_Temp_Min valuecolor=[>30="red", >25="orange", >10="green", <=10="blue", <=3="navy"]
+			Frame label="Weather report"{
+ 			 	Text item=Weather_yahoo_CommonId {
+ 			 		Webview url="/weather?locationId=wunderground&layout=example&iconset=colorful" height=7
+ 			 	}
 				Text item=Weather_temperature1 valuecolor=[Weather_temperature1_LastUpdate>120="lightgray",>30="red", >25="orange", >10="green", <=10="blue",<=3="navy"] {
-					Text item=Weather_Temp_Max valuecolor=[>30="red", >25="orange", >10="green", <=5="blue"] 				
-					Text item=Weather_Temp_Min valuecolor=[>30="red", >25="orange", >10="green", <=10="blue", <=3="navy"]
 					Switch item=Chart_Period label="Chart Period" mappings=[0="H", 1="D", 2="W", 3="M", 4="Y"]
-					Chart item=Weather_temperature1 period=H refresh=600 visibility=[Chart_Period==0]
-					Chart item=Weather_temperature1 period=D refresh=3600 visibility=[Chart_Period==1]
-					Chart item=Weather_temperature1 period=W refresh=3600 visibility=[Chart_Period==2, Chart_Period==Uninitialized]
-					Chart item=Weather_temperature1 period=M refresh=3600 visibility=[Chart_Period==3]
+					Chart item=Weather_temperature1 period=h refresh=600 visibility=[Chart_Period==0] 					
+					Chart item=Weather_temperature1 period=D refresh=3600 visibility=[Chart_Period==1] 					
+					Chart item=Weather_temperature1 period=W refresh=3600 visibility=[Chart_Period==2, Chart_Period==Uninitialized] 					
+					Chart item=Weather_temperature1 period=M refresh=3600 visibility=[Chart_Period==3]					
 					Chart item=Weather_temperature1 period=Y refresh=3600 visibility=[Chart_Period==4]
 				}
-				Text item=Weather_pressure valuecolor=[Weather_pressure_LastUpdate>120="lightgray", <932="blue", <=945="green", >=945="orange"] {
-					Chart item=Weather_pressure period=W refresh=3600
-				}
-				Text item=Weather_humidity valuecolor=[Weather_humidity_LastUpdate>120="lightgray", <932="blue", <=945="green", >=945="orange"] {
-					Chart item=Weather_humidity period=W refresh=3600
-				}
-			}			
-			Frame label="Sites reports" {				
-// UNDERGROUND WEATHER
-				Text item=Weather_temperature_wunderground valuecolor=[>30="red", >25="orange", >10="green", <=10="blue",<=3="navy"] {
+				Text item=Weather_Temp_Min valuecolor=[>30="red", >25="orange", >10="green", <=5="blue"]
+ 			 	Text item=Weather_Temp_Max valuecolor=[>30="red", >25="orange", >10="green", <=5="blue"]
+ 			 	}   
+// UNDERGROUND WEATHER				
+//			
+			Frame label="Underground weather" {
+	 			Text item=Weather_temperature_Max_wunderground valuecolor=[>30="red", >25="orange", >10="green", <=5="blue"] 				
+				Text item=Weather_temperature_Min_wunderground valuecolor=[>30="red", >25="orange", >10="green", <=10="blue", <=3="navy"]/**/
+				Text item=Weather_temperature_wunderground /*valuecolor=[Weather_temperature1_LastUpdate>120="lightgray",>30="red", >25="orange", >10="green", <=10="blue",<=3="navy"] */ {
 					Text item=Weather_temperature_Max_wunderground valuecolor=[>30="red", >25="orange", >10="green", <=5="blue"] 				
 					Text item=Weather_temperature_Min_wunderground valuecolor=[>30="red", >25="orange", >10="green", <=10="blue", <=3="navy"]
 					Switch item=Chart_Period label="Chart Period" mappings=[0="H", 1="D", 2="W", 3="M", 4="Y"]
@@ -173,7 +188,17 @@ sitemap demo label="Main Menu"
 				Text item=Weather_pressure_wunderground valuecolor=[Weather_LastUpdate>120="lightgray", >=1020="orange", <1020="green", <1000="blue"] {
 					Chart item=Weather_pressure_wunderground period=W refresh=3600
 				}
-				Text item=Weather_humidity_wunderground valuecolor=[<50="orange", <80="green", >80="blue"] /*{
+//				Text item=Weather_humidity_wunderground valuecolor=[<50="orange", <80="green", >80="blue"]
+/* 				Text item=Weather_pressure valuecolor=[Weather_pressure_LastUpdate>120="lightgray", <932="blue", <=945="green", >=945="orange"] {
+					Chart item=Weather_pressure period=W refresh=3600
+				}
+				Text item=Weather_humidity valuecolor=[Weather_humidity_LastUpdate>120="lightgray", <932="blue", <=945="green", >=945="orange"] {
+					Chart item=Weather_humidity period=W refresh=3600
+				}/* */
+				
+			}			
+			Frame label="Yahoo weather" {				
+				 /*{
 					Chart item=Weather_humidity_wunderground period=W refresh=3600
 				}/**/
 //	YAHOO WEATHER			
@@ -195,6 +220,8 @@ sitemap demo label="Main Menu"
 				Text item=Weather_forecast_yahoo_avg valuecolor=[<5="navy",<=7="blue",<=12="green",<=17="orange",>=17="red"] {
 					Chart item=CompareAverage period=W refresh=3600
 				}
+//				Text item=Weather_pressure_owm
+//				Text item=Weather_temperature_owm
 			}
 			
  		Frame  {
@@ -266,7 +293,7 @@ sitemap demo label="Main Menu"
 				}			
  				
 			}
-			Text label="Monitoring" icon="settings" {		
+/* 			Text label="Monitoring" icon="settings" {		
 				Text label="IP Devices" icon="network"  {
 					Text item=IP_iPhone  {
 						Chart item=IP_iPhone period=W refresh=3600				
@@ -296,8 +323,11 @@ sitemap demo label="Main Menu"
 					Text item=IP_BR_ESP01 {
 						Chart item=IP_BR_ESP01 period=W refresh=3600				
 					}
+					Text item=IP_LR_HEATER_ESP01 {
+						Chart item=IP_LR_HEATER_ESP01 period=W refresh=3600				
+					}
 													
-				}
+				} 
 				Group item=System icon="settings" {
 					Text item=DirUsage_root valuecolor=[<=1400="green", >1424="orange", >1500="red"]  { Chart item=DirUsage_root period=M refresh=3600 }
 					Text item=UsrUsage valuecolor=[<=1400="green", >1424="orange", >1500="red"]  { Chart item=UsrUsage period=M refresh=3600 }
@@ -315,12 +345,13 @@ sitemap demo label="Main Menu"
 					Text item=uptimeFormatted { Chart item=uptime period=M refresh=3600 }
 					Text item=OpenhabUptimeFormatted { Chart item=OpenhabUptime period=M refresh=3600 }
 				}
-			}	 		
+			}	 */		
 			}
 			Frame label="Commands/executions" {
 				Switch item=OpenHAB mappings=[1="ZeroLogs",2="Restart OH"]
 				Switch item=BackupSystem mappings=[ON="Backup"]
 				Switch item=ALL_Reinitialize icon="settings" mappings=[1="System initialize"]
+				Switch item=Debug icon="settings" mappings=[0="OFF",1="ON"]
 				Switch item=HomeAway icon="settings" mappings=[1="Home",2="Away",3="Vacation"]
 			}
 		}
@@ -329,7 +360,25 @@ sitemap demo label="Main Menu"
 	Frame label="Date"  {
 		Text item=Date 		
 	}	
- /* 	Frame label="Playground"  {
-		Switch item=TestButton mappings=[0="Zero",1="One"]
-	}/* */	
+// 	Frame label="Playground"  {
+// 		Text item=KIDS_TEMP_01 icon="bedroom" label="Детска стая [%.1f °C]" { // valuecolor=[ LR_Temp_sensor1_LastUpdate>120="lightgray", >25="orange", >17="green", <=17="blue"]
+// 			Frame label="Бутони"{
+// 					Switch item=KIDS_MODE mappings=["ALL_OFF"="off", "MANUAL"="manual", "AUTO"="auto"]
+// 					Switch item=initializePlayground icon="settings" mappings=[1="Initialize"]
+// 					Text item=KIDS_TEMP_01
+// 					Setpoint item=KIDS_DESIRED_TEMP_01 minValue=16 maxValue=30 step=0.5 visibility=[KIDS_MODE=="AUTO"] 
+//					Switch item=KIDS_RAD_01 visibility=[KIDS_MODE=="MANUAL"]
+//					Switch item=KIDS_RAD_02 visibility=[KIDS_MODE=="MANUAL"]
+//					Switch item=CHILLER visibility=[KIDS_MODE=="MANUAL"]
+// 			}
+//			Frame label="Активни статуси" {
+//					Text item=KIDS_RAD_01CB
+//					Text item=KIDS_RAD_02CB 
+//					Text item=CHILLER_CB
+//			}
+// 		}
+//	}
 }
+
+
+

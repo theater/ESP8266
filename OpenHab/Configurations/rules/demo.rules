@@ -15,12 +15,11 @@ var Timer tLRHeaterStop=null
 //BR Timers
 var Timer tendTimeMorning
 var Timer tstartTimeMorning
-var Timer tendTimeAfternoon
-var Timer tstartTimeAfternoon
 var Timer tBRFanTimer
 var Timer tAQLightsStartTimer
 var Timer tAQLightsStopTimer
 var String Boiler_EndTimeMorning = "06:00"
+var Timer tScene1
 
 //var String Boiler_EndTimeAfternoon = "18:30"
 
@@ -51,13 +50,13 @@ then
 			sendCommand(AQ_Light1,OFF) 
 		}
 	]
-					
+	logDebug("RULES","Daily END of ther day")
+				
 end
 
-rule "Daily end of the day"
-when Time cron "0 55 23 * * ?" 
+rule "Daily start of the day"
+when System started or Time cron "50 23 0 * * ?" 
 then
-    logDebug("RULES","Daily END of ther day")
     postUpdate(LR_Temp_avg,LR_Temp_sensor1.averageSince(now.toDateMidnight))
 end
 /*
@@ -93,6 +92,8 @@ end
  * This rule demonstrates how a NumberItem can be used to easily control the local sound system.
  * A selection widget in the UI provides easy access for this
  */
+ 
+ 
 rule "Select Radio Station"
 	when
 		Item Radio_Station received command
@@ -118,6 +119,7 @@ rule "Initialize states of variables"
 //Living room initialize	
 	sendCommand(LR_Heater1,OFF)   //default value of living room heater is OFF
 	postUpdate(LR_Heater1_mode,2)  // default mode is AUTO
+	postUpdate(LR_LED1,OFF)  // default mode is AUTO
 //	postUpdate(LR_Temp_set,22)  // default mode is AUTO
 //	postUpdate(LR_Set_Time,4.5) // Time 
 //	postUpdate(LR_Set_Temperature1,16)  //16C during work hours
@@ -137,17 +139,25 @@ rule "Initialize states of variables"
 	sendCommand(BR_Boiler,OFF) // default bathroom stuff OFF
 	sendCommand(BR_Fan_state,OFF)  // default bathroom stuff OFF
 	sendCommand(BR_Heater_state,OFF) // default bathroom stuff OFF
-	sendCommand(BR_Boiler_state,OFF) // default bathroom stuff OFF	
+	sendCommand(BR_Boiler_state,OFF) // default bathroom stuff OFF
+	sendCommand(BR_Scenes,0) // default bathroom stuff OFF	
+	sendCommand(LR_LED1,OFF)
 //	postUpdate(BR_Temp_Boiler_Set,50); // SET temperature BOILER
 //	postUpdate(BR_Temp_Room_Set,22); // SET TEMPERATURE
 //	postUpdate(BR_Humidity_Set,40); // SET HUMIDITY
 //	postUpdate(AQ_Set_Temperature,25) // 25C initial aquarium temp value
 //	postUpdate(AQ_TempDelta,2) 
 //	postUpdate(AQ_TempDelta,2)
+    postUpdate(LR_Temp_avg,LR_Temp_sensor1.averageSince(now.toDateMidnight))
+    postUpdate(Debug,0)   // Debug mode defaults to OFF
 
-    executeCommandLine("touch /hab/openhab/configurations/persistence/mysql.persist")
+//    executeCommandLine("touch /hab/openhab/configurations/persistence/mysql.persist")
 	logDebug("RULES","System Initialization ENDS HERE")
 end
+
+//rule "Initialize playground" when Item initializePlayground received command
+////then postUpdate ( KIDS_DESIRED_TEMP_01 , 25 ) 
+//end 
 
 //rule "Evening shutters down"
 //	when
@@ -157,7 +167,7 @@ end
  /* */ 
 rule "Update max and min temperatures"
 when
-	Time cron "0 0/5 * * * ?" or
+	Time cron "0 0/15 * * * ?" or
 	System started
 then	
 // My Station
@@ -263,9 +273,10 @@ end
 
 rule "Living room heating timers"
 	when Time cron "0 0 20 * * ?" or Item LR_Set_Time received command or Item LR_Heater1_mode received command then
-	var DateTime LRHeaterEndTime=parse(now.getYear() + "-" + now.getMonthOfYear() + "-" + now.getDayOfMonth() + "T06:00:00")
-	LRHeaterEndTime=LRHeaterEndTime.plusDays(1); // Heater ends time is always next day at 6:00 due to better pricing conditions :P
-//	var int array[3][2]=new;
+	var DateTime LRHeaterStartTime
+	var DateTime LRHeaterEndTime
+
+    postUpdate(LR_Temp_avg,LR_Temp_sensor1.averageSince(now.toDateMidnight))
 	val X0=-7; 
 	val Y0=9; 
 	val X1=10; 
@@ -275,15 +286,24 @@ rule "Living room heating timers"
 	// here we put the dynamic stuff, i.e. if set temperature is different than the average 
 	// then we're adding or substracting some time from the total time 
 	val difference=LR_Temp_set.state as DecimalType - LR_Temp_avg.state as DecimalType
-	val correction=difference * 0.5; // assumption is that for every 1C difference we need change of 30 min... to be tested
+	val correction=difference * 0.75; // assumption is that for every 1C difference we need change of 45 min... to be tested
 	postUpdate(LR_correction,correction)
 	// thanks Mr. Lagrange for the bellow
 	var Number Y=Y0+((X-X0)/(X1-X0))*(Y1-Y0)+correction;  
-	if(Y<1) {
+	if(Y<0.5) {
 		Y=0;
 	}
 	postUpdate(LR_Calculated_Time,Y);
-	var DateTime LRHeaterStartTime=LRHeaterEndTime.minusMinutes((60*((LR_Calculated_Time.state as DecimalType).floatValue)).intValue) // Start time is calculated by substracting from end time 60 mins * calculated time +/- difference
+	if(Y>8) {
+		LRHeaterStartTime=parse(now.getYear() + "-" + now.getMonthOfYear() + "-" + now.getDayOfMonth() + "T22:00:00")
+		LRHeaterEndTime=LRHeaterStartTime.plusMinutes((60*((LR_Calculated_Time.state as DecimalType).floatValue)).intValue) // Start time is calculated by substracting from end time 60 mins * calculated time +/- difference
+	} else {
+		LRHeaterEndTime=parse(now.getYear() + "-" + now.getMonthOfYear() + "-" + now.getDayOfMonth() + "T06:00:00")
+		LRHeaterEndTime=LRHeaterEndTime.plusDays(1); // Heater ends time is always next day at 6:00 due to better pricing conditions :P
+		LRHeaterStartTime=LRHeaterEndTime.minusMinutes((60*((LR_Calculated_Time.state as DecimalType).floatValue)).intValue) // Start time is calculated by substracting from end time 60 mins * calculated time +/- difference
+	}
+	postUpdate(LR_Heater_set_ON_time, LRHeaterStartTime.toString)
+	postUpdate(LR_Heater_set_OFF_time, LRHeaterEndTime.toString)
 	logInfo("RULES","LR:LR Heater1 mode="+LR_Heater1_mode.state)
 	switch(LR_Heater1_mode.state) {
 			case 0: {
@@ -303,29 +323,43 @@ rule "Living room heating timers"
 					}	
 			case 1: logDebug("RULES","LR:Mode MANUAL")		
 			case 2 : {
-				logInfo("RULES","LR: Start timer SET="+LRHeaterStartTime)
-				if(tLRHeaterStart!=null) {
-					tLRHeaterStart.reschedule(LRHeaterStartTime)
+				logInfo("RULES","LR:Start timer SET="+LRHeaterStartTime)
+				if(Y>0) {
+					if(tLRHeaterStart!=null) {
+						tLRHeaterStart.reschedule(LRHeaterStartTime)
+					} else {
+						tLRHeaterStart = createTimer(LRHeaterStartTime) [| 
+							logInfo("RULES","LR:STARTING HEATER TIME")
+							sendCommand(LR_Heater1,ON)
+							postUpdate(LR_Heater_last_ONtime, new DateTimeType())
+							sendMail("polychronov@gmail.com","OPENHAB:Living room heater STARTED", "OPENHAB:Living room heater started: "+now)
+							sendMail("vpolihronova@gmail.com","OPENHAB:Living room heater STARTED", "OPENHAB:Living room heater started: "+now)
+							tLRHeaterStart.cancel
+							tLRHeaterStart=null
+						]
+					}
+					logInfo("RULES","LR:Stop timer SET="+LRHeaterEndTime)
+					if(tLRHeaterStop!=null) {
+						tLRHeaterStop.reschedule(LRHeaterEndTime)
+					} else {
+    					tLRHeaterStop = createTimer(LRHeaterEndTime) [| 
+    						logInfo("RULES","LR:STOPPING HEATER TIME")
+    						sendCommand(LR_Heater1,OFF)
+    						postUpdate(LR_Heater_last_OFFtime, new DateTimeType())
+    						sendMail("polychronov@gmail.com","OPENHAB:Living room heater STOPPED", "OPENHAB:Living room heater stopped: "+now)
+							sendMail("vpolihronova@gmail.com","OPENHAB:Living room heater STOPPED", "OPENHAB:Living room heater stopped: "+now)
+							tLRHeaterStop.cancel
+							tLRHeaterStop=null
+    					]
+					}
 				} else {
-					tLRHeaterStart = createTimer(LRHeaterStartTime) [| 
-						logInfo("RULES","LR:STARTING HEATER TIME")
-						sendCommand(LR_Heater1,ON)
-						postUpdate(LR_Heater_last_ONtime, new DateTimeType())
-						sendMail("polychronov@gmail.com","OPENHAB:Living room heater STARTED", "OPENHAB:Living room heater started: "+now)
-						sendMail("vpolihronova@gmail.com","OPENHAB:Living room heater STARTED", "OPENHAB:Living room heater started: "+now)
-					]
-				}
-				logInfo("RULES","LR: Stop timer SET="+LRHeaterEndTime)
-				if(tLRHeaterStop!=null) {
-					tLRHeaterStop.reschedule(LRHeaterEndTime)
-				} else {
-    				tLRHeaterStop = createTimer(LRHeaterEndTime) [| 
-    					logInfo("RULES","LR:STOPPING HEATER TIME")
-    					sendCommand(LR_Heater1,OFF)
-    					postUpdate(LR_Heater_last_OFFtime, new DateTimeType())
-    					sendMail("polychronov@gmail.com","OPENHAB:Living room heater STOPPED", "OPENHAB:Living room heater started: "+now)
-						sendMail("vpolihronova@gmail.com","OPENHAB:Living room heater STOPPED", "OPENHAB:Living room heater started: "+now)
-    				]
+						logInfo("RULES","LR:Too hot! Heater will not be started...")
+						tLRHeaterStart.cancel
+						tLRHeaterStart=null
+						tLRHeaterStop.cancel
+						tLRHeaterStop=null
+//						sendMail("polychronov@gmail.com","OPENHAB:LR_HEATER1 will not be started", "OPENHAB:Living room heater will not be started. Time<=1hr. ")
+//						sendMail("vpolihronova@gmail.com","OPENHAB:LR_HEATER1 will not be started", "OPENHAB:Living room heater will not be started: Time<=1hr. ")
 				}
     		}
 		}
@@ -337,6 +371,10 @@ end
 /************************ BATHROOM********************* */
 
 rule "BR_MODE Callback handling" when Item BR_Mode_CB received command then postUpdate(BR_Mode,BR_Mode_CB.state) end
+rule "BR_HUMIDITY_SET Callback handling" when Item BR_Humidity_Set_CB received update then	postUpdate(BR_Humidity_Set,BR_Humidity_Set_CB.state) end
+rule "BR_BOILER Callback handling" when Item BR_Boiler_state received command then	postUpdate(BR_Boiler, BR_Boiler_state.state) end
+rule "BR_FAN Callback handling" when Item BR_Fan_state received command then	postUpdate(BR_Fan, BR_Fan_state.state) end
+rule "BR_HEATER Callback handling" when Item BR_Heater_state received command then	postUpdate(BR_Heater, BR_Heater_state.state) end
 
 
 rule "Boiler heating timeframe"
@@ -403,12 +441,13 @@ rule "Bathroom Boiler - temp control"
 	case 0: { sendCommand(BR_Boiler,OFF) } 
 	case 1: logDebug("RULES","BR Boiler MANUAL MODE")	/* */
 	case 2: {
-		if(temperature>=temperature_set&&BR_Boiler_state.state==ON){ //
+		if(temperature>=temperature_set && BR_Boiler_state.state==ON){ //
 				sendCommand(BR_Boiler,OFF)
 				logDebug("RULES","BR Boiler set temperature reached")
-				sendMail("polychronov@gmail.com","OPENHAB:Boiler set temperature reached - "+temperature+"°C","OPENHAB:Boiler set temperature reached - "+temperature+"°C")
-				sendMail("vpolihronova@gmail.com","OPENHAB:Boiler set temperature reached - "+temperature+"°C","OPENHAB:Boiler set temperature reached - "+temperature+"°C")				
-				
+				if(HomeAway.state != 3) {
+					sendMail("polychronov@gmail.com","OPENHAB:Boiler set temperature reached - "+temperature+"°C","OPENHAB:Boiler set temperature reached - "+temperature+"°C")
+					sendMail("vpolihronova@gmail.com","OPENHAB:Boiler set temperature reached - "+temperature+"°C","OPENHAB:Boiler set temperature reached - "+temperature+"°C")
+				}				
 			} 
 			logDebug("RULES","BR Boiler AUTO mode")	/* */
 			}
@@ -422,20 +461,25 @@ rule "Bathroom Boiler - temp control"
 end
 
 rule "Bathroom fan control temporary press"
-when Item BR_Mode received command or Item BR_Mode received update then
+when Item BR_Mode received command then
+	val timerMins = 15
+	val humiditySet = 30
+	
 	if (BR_Mode.state==4) {
-		sendCommand(BR_Fan,ON)
+		sendCommand(BR_Mode,2)
+		sendCommand(BR_Humidity_Set,humiditySet)
+		logInfo("RULES","BR FAN timer set FAN will stop after " + timerMins + " min")
 		if(tBRFanTimer!=null) {
-			tBRFanTimer.reschedule(now.plusMinutes(20))
+			tBRFanTimer.reschedule(now.plusMinutes(timerMins))
 			logInfo("RULES","BR FAN timer rescheduled")
 		} else {
-		tBRFanTimer = createTimer(now.plusMinutes(20)) [|
-			sendCommand(BR_Mode,2)
+			tBRFanTimer = createTimer(now.plusMinutes(timerMins)) [|
+			postUpdate(BR_Humidity_Set,BR_Humidity_Set.previousState(true).state)
 			logInfo("RULES","BR FAN timer done. Mode to AUTO.")
 			tBRFanTimer.cancel
 			tBRFanTimer=null
+			
 		]
-		logInfo("RULES","BR FAN timer set FAN will stop after X min")
 		}		
 	}
 end
@@ -484,6 +528,36 @@ rule "Bathroom Temperature control"
 	
 end
 
+rule "Bathroom Quick modes"
+when Item BR_Scenes received update or Item BR_Scenes received command then
+	switch (BR_Scenes.state) {
+		case 0: {
+			postUpdate(BR_Temp_Room_Set,20)
+			sendCommand(BR_Boiler,OFF)
+		}
+		case 1: {
+			if(Weather_temperature_wunderground.averageSince(now.toDateMidnight)<10) {		
+			if(tScene1!=null) {
+				tScene1.reschedule(now.plusMinutes(30))
+				logInfo("RULES","BR Scene1 timer rescheduled"+now.plusMinutes(30))
+			} else {
+				postUpdate(BR_Temp_Room_Set,24)
+				if((BR_Temp_Boiler_Set.state as DecimalType - BR_Temp_Boiler.state as DecimalType)>8) {
+						sendCommand(BR_Boiler,ON)
+					}
+				logInfo("RULES","BR Scene1 timer rescheduled"+now.plusMinutes(60))
+				tScene1 = createTimer(now.plusMinutes(60)) [|
+//					postUpdate(BR_Temp_Room_Set,20)
+					sendCommand(BR_Scenes,0)
+					logInfo("RULES","BR Scene1 timer done. Mode to AUTO.")
+					tScene1.cancel
+					tScene1=null
+					]
+				}	
+			}			
+		}
+	}
+end
 
 
 /***************************AQUARIUM *********************************/
@@ -528,7 +602,7 @@ switch (AQ_Logics_mode.state) {
 // also if real vs set temperature is more than 1.5C
 // also if Light is ON and the real temperature is more than the set temperature... 
 // THEN - ON, else - OFF
-		if (((aq_temp_sensor-aq_temp_set_temp)>0.5)&&(delta1>0.15)||(aq_temp_sensor>(aq_temp_set_temp+1.3))||((AQ_Light1.state==ON)&&(aq_temp_sensor>aq_temp_set_temp))) {
+		if (((aq_temp_sensor-aq_temp_set_temp)>0.5)&&(delta1>0.15)||(aq_temp_sensor>(aq_temp_set_temp+1.3))||(AQ_Light1.state==ON)) {
 			sendCommand(AQ_Cooler1,ON)
 		} else{
 			sendCommand(AQ_Cooler1,OFF)
@@ -595,33 +669,7 @@ logDebug("MONITORING","Monitoring logics START here...")
 end
 /* */
 
-rule "Monitoring Memory and notifications"  // MEMORY USAGE
-when Item MemUsedPercent changed 
-then
-if(MemUsedPercent.state as DecimalType>90) {
-	if(MemUsedPercent.state as DecimalType>95) {
-		
-		logDebug("MONITORING","MEMORY USAGE: 95% CRITICAL TRESHOLD triggered")
-		sendMail("polychronov@gmail.com","OPENHAB:Memory usage 95%","")
 
-	}
-	logDebug("MONITORING","MEMORY USAGE: 90% WARNING TRESHOLD triggered")
-	sendMail("polychronov@gmail.com","OPENHAB:Memory usage 90%","")
-}
-end
-
-rule "Monitoring CPU and notifications"		// CPU USAGE
-when Item OpenhabCpuPercent changed 
-then
-if(OpenhabCpuPercent.state as DecimalType>80) {
-	if(OpenhabCpuPercent.state as DecimalType>90) {
-		logDebug("MONITORING","CPU USAGE: 90% CRITICAL TRESHOLD triggered")
-		sendMail("polychronov@gmail.com","OPENHAB:CPU usage 90%","")
-	}
-	logDebug("MONITORING","CPU USAGE: 80% WARNING TRESHOLD triggered")
-	sendMail("polychronov@gmail.com","OPENHAB:CPU usage 80%","")
-}
-end
 
 ///  ======= Some Administrative tasks on buttons
 
@@ -641,6 +689,7 @@ rule "OpenHAB Administrative tasks" when Item OpenHAB received command then
 	}
 end
 
+/* 
 rule "Trigger clean up logs if no enough space on /"
 when Item DirUsage_root changed then
 val RootUsage = DirUsage_root.state as DecimalType
@@ -649,7 +698,7 @@ if (RootUsage >=1551) {
 //	logInfo("EXEC","INITIATED CLEANUP of all LOGS due to not enough space on /")
 }  // If Root folder is more than 1620MB clean up logs
 end
-/* 
+
 rule "Backup system" when Item BackupSystem received command ON then
 	logInfo("EXEC","Backup the system under /backup folder")
 	executeCommandLine("/root/backup.sh",60000)
@@ -659,19 +708,25 @@ end
 /**/
 
 rule "Home and away statuses for the family" when Item HomeAway received command then
- 	if(HomeAway.state==1) {
-		logDebug("EXEC","We're HOME...")
-		postUpdate(BR_Humidity_Set,60)
-		postUpdate(BR_Temp_Room_Set,23)		
-		postUpdate(BR_Mode,2)		
-	} else if(HomeAway.state==2) {
-			logDebug("EXEC","We're AWAY...")
-			postUpdate(BR_Humidity_Set,70)
-			postUpdate(BR_Temp_Room_Set,18)
-			postUpdate(BR_Mode,2)
-		} else if(HomeAway.state==3) {
-			logDebug("EXEC","We're on VACATION...")	
-			postUpdate(BR_Mode,0)
+ 	switch(HomeAway.state) {
+ 		case 1:{
+				logDebug("EXEC","We're HOME...")
+				postUpdate(BR_Humidity_Set,60)
+				postUpdate(BR_Temp_Boiler_Set,65)
+				postUpdate(BR_Temp_Room_Set,20)
+				postUpdate(LR_Temp_set,20)			
+			} 
+		case 2: {
+				logDebug("EXEC","We're AWAY...")
+				postUpdate(BR_Humidity_Set,70)
+			} 
+		case 3: { 
+				logDebug("EXEC","We're on VACATION...")
+				postUpdate(BR_Temp_Boiler_Set,25)
+				postUpdate(BR_Temp_Room_Set,16)
+				postUpdate(LR_Temp_set,16)
+				postUpdate(BR_Humidity_Set,75)	
+			}	
 		}
 end
 
